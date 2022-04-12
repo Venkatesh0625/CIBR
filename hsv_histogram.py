@@ -1,27 +1,19 @@
-import cv2, math
-import numpy as np
+import cv2, numpy as np
+from math import *
 
-def hscColorHistpgram(img): 
-    # img = cv2.imread("img.png ")
+
+def hscColorHistpgram(img):
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    rows, cols, _ = img_hsv.shape
 
-    rows, cols, p = img_hsv.shape
-    h, s, v = img_hsv[:,:,0], img_hsv[:,:,1], img_hsv[:,:,2]
-    hist_h = cv2.calcHist([img_hsv],[0],None,[256],[0,256])
-    hist_s = cv2.calcHist([s],[0],None,[256],[0,256])
-    hist_v = cv2.calcHist([v],[0],None,[256],[0,256])
+    h, s, v = img_hsv[:, :, 0], img_hsv[:, :, 1], img_hsv[:, :, 2]
 
-    numberOfLevelsForH = 8
-    numberOfLevelsForS = 2
-    numberOfLevelsForV = 2
-
-    maxValueForH = h.max()
-    maxValueForS = s.max()
-    maxValueForV = v.max()
+    HLevels, SLevels, VLevels = 8, 2, 2
+    HMax, SMax, VMax = h.max(), s.max(), v.max()
 
     hsvColorHistorgram = np.zeros((8, 2, 2))
 
-    index = np.zeros((rows*cols, 3), dtype=int)
+    index = np.zeros((rows * cols, 3), dtype=int)
     count = 0
 
     quantizedValueForH = np.zeros((rows, cols))
@@ -30,10 +22,10 @@ def hscColorHistpgram(img):
 
     for row in range(rows):
         for col in range(cols):
-            quantizedValueForH[row, col] = math.ceil(numberOfLevelsForH * h[row, col]/maxValueForH)
-            quantizedValueForS[row, col] = math.ceil(numberOfLevelsForS * s[row, col]/maxValueForS)
-            quantizedValueForV[row, col] = math.ceil(numberOfLevelsForV * v[row, col]/maxValueForV)
-            
+            quantizedValueForH[row, col] = ceil(HLevels * h[row, col] / HMax)
+            quantizedValueForS[row, col] = ceil(SLevels * s[row, col] / SMax)
+            quantizedValueForV[row, col] = ceil(VLevels * v[row, col] / VMax)
+
             index[count, 0] = quantizedValueForH[row, col]
             index[count, 1] = quantizedValueForS[row, col]
             index[count, 2] = quantizedValueForV[row, col]
@@ -41,11 +33,11 @@ def hscColorHistpgram(img):
 
     index = np.subtract(index, np.ones(index.shape, dtype=int))
 
-    for row in range(rows*cols):
-        if index[row, 0] == -1 or index[row, 1] == -1 or index[row, 2] == -1:
-            continue
-
-        hsvColorHistorgram[index[row, 0], index[row, 1], index[row, 2]] = hsvColorHistorgram[index[row, 0], index[row, 1], index[row, 2]] + 1
+    for row in range(rows * cols):
+        if -1 not in index[row]:
+            x, y, z = index[row]
+            hsvColorHistorgram[x, y, z] += 1
 
     hsvColorHistorgram.shape = (32, 1)
-    hsvColorHistorgram =  hsvColorHistorgram / sum(hsvColorHistorgram)
+    hsvColorHistorgram = hsvColorHistorgram / sum(hsvColorHistorgram)
+
